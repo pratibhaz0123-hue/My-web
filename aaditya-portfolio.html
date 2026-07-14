@@ -479,9 +479,10 @@
       </div>
     </div>
     <div class="form-card">
-      <form id="contactForm" action="https://formsubmit.co/upretiaaditya53@gmail.com" method="POST">
+      <form id="contactForm" action="https://formsubmit.co/ajax/upretiaaditya53@gmail.com" method="POST">
         <input type="hidden" name="_subject" value="New message — AADI VSC Production site">
         <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_template" value="table">
         <div class="field">
           <label>Your Name</label>
           <input type="text" name="name" id="fname" required placeholder="Full name">
@@ -510,8 +511,46 @@
 </footer>
 
 <script>
-  // Contact form submits natively to Formsubmit — no JS needed for delivery.
-  // Smooth-scroll handled by CSS (html{scroll-behavior:smooth}).
+  const form = document.getElementById('contactForm');
+  const formNote = document.getElementById('formNote');
+
+  if (form) {
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Sending...';
+      }
+
+      if (formNote) {
+        formNote.textContent = 'Sending your message...';
+      }
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' }
+        });
+
+        if (response.ok) {
+          window.location.href = '/thank-you.html';
+        } else {
+          throw new Error('Unable to send message right now.');
+        }
+      } catch (error) {
+        if (formNote) {
+          formNote.textContent = 'The message could not be sent. Please email upretiaaditya53@gmail.com directly.';
+        }
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i>Send Message';
+        }
+      }
+    });
+  }
 </script>
 
 </body>
