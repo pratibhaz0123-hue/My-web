@@ -268,7 +268,18 @@
     transition:transform .2s, box-shadow .2s;
   }
   .submit-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(109,140,255,0.22);}
+  .submit-btn:disabled{opacity:0.75;cursor:not-allowed;transform:none;box-shadow:none;}
   .form-note{font-size:12px;color:var(--ink-dim);margin-top:14px;text-align:center;line-height:1.6;}
+  .toast{
+    position:fixed;left:50%;top:20px;transform:translateX(-50%) translateY(-14px);z-index:200;
+    display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:999px;
+    background:rgba(7,10,20,0.94);border:1px solid rgba(109,140,255,0.25);box-shadow:0 18px 45px rgba(0,0,0,0.28);
+    backdrop-filter:blur(10px);color:var(--ink);max-width:min(92vw,560px);opacity:0;pointer-events:none;transition:all .3s ease;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+  .toast-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04070d;font-size:14px;flex-shrink:0;}
+  .toast-btn{margin-left:auto;padding:9px 14px;border-radius:999px;background:linear-gradient(100deg,var(--cyan),var(--purple));color:#04070d;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;white-space:nowrap;}
+  .toast-close{border:none;background:transparent;color:var(--ink-dim);font-size:14px;cursor:pointer;}
 
   footer{
     padding:36px 6vw;border-top:1px solid var(--line);
@@ -297,6 +308,15 @@
 </style>
 </head>
 <body>
+<div id="welcomeToast" class="toast" role="status" aria-live="polite">
+  <span class="toast-icon"><i class="fa-solid fa-heart"></i></span>
+  <div>
+    <strong>Thank you for giving your time to my project.</strong>
+    <div style="font-size:13px;color:var(--ink-dim);margin-top:3px;">Your support means a lot.</div>
+  </div>
+  <a href="#projects" class="toast-btn">View My Portfolio</a>
+  <button id="toastClose" class="toast-close" type="button" aria-label="Close notification"><i class="fa-solid fa-xmark"></i></button>
+</div>
 
 <nav>
   <div class="logo"><div class="mark">AD</div>Aaditya Upreti</div>
@@ -478,8 +498,25 @@
         <div><div class="t">Location</div><div class="v">Nepal</div></div>
       </div>
     </div>
-    <div class="contact-note">
-      <p>If you have any idea, mail <a href="mailto:upretiaaditya53@gmail.com">upretiaaditya53@gmail.com</a>.</p>
+    <div class="form-card">
+      <form id="contactForm">
+        <div class="field">
+          <label for="name">Your Name</label>
+          <input id="name" name="name" type="text" placeholder="Enter your name" required>
+        </div>
+        <div class="field">
+          <label for="email">Your Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" required>
+        </div>
+        <div class="field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="Write your message here..." required></textarea>
+        </div>
+        <button class="submit-btn" id="submitBtn" type="submit">
+          <i class="fa-solid fa-paper-plane"></i>Send Message
+        </button>
+        <p class="form-note" id="formStatus">Your message will be sent directly to upretiaaditya53@gmail.com.</p>
+      </form>
     </div>
   </div>
 </section>
@@ -492,6 +529,65 @@
   <a href="#home" class="to-top"><i class="fa-solid fa-arrow-up"></i></a>
 </footer>
 
+<script>
+  const welcomeToast = document.getElementById('welcomeToast');
+  const toastClose = document.getElementById('toastClose');
+  if (welcomeToast) {
+    setTimeout(() => welcomeToast.classList.add('show'), 400);
+  }
+  if (toastClose && welcomeToast) {
+    toastClose.addEventListener('click', () => welcomeToast.classList.remove('show'));
+  }
+
+  const contactForm = document.getElementById('contactForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const formStatus = document.getElementById('formStatus');
+
+  if (contactForm) {
+    contactForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(contactForm);
+      const payload = {
+        name: formData.get('name')?.toString().trim() || '',
+        email: formData.get('email')?.toString().trim() || '',
+        message: formData.get('message')?.toString().trim() || ''
+      };
+
+      if (!payload.name || !payload.email || !payload.message) {
+        formStatus.textContent = 'Please complete all fields before sending.';
+        formStatus.style.color = '#fbbf24';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+
+      try {
+        const response = await fetch('/api/send-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          formStatus.textContent = 'Message sent successfully. I will reply soon.';
+          formStatus.style.color = '#34d399';
+          contactForm.reset();
+        } else {
+          formStatus.textContent = result.message || 'Unable to send message right now.';
+          formStatus.style.color = '#f87171';
+        }
+      } catch (error) {
+        formStatus.textContent = 'Unable to reach the server. Please try again later.';
+        formStatus.style.color = '#f87171';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>Send Message';
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
