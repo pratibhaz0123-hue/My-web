@@ -6,7 +6,16 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { name, email, message } = req.body || {};
+    let body = req.body || {};
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (error) {
+        body = {};
+      }
+    }
+
+    const { name, email, message } = body;
 
     if (!name || !email || !message) {
       return res.status(400).json({ success: false, message: 'Please provide your name, email, and message.' });

@@ -563,23 +563,38 @@
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
 
       try {
-        const response = await fetch('/api/send-message', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
+        const endpoints = ['/api/send-message', '/api/sendmessage'];
+        let finalMessage = 'Unable to reach the server. Make sure the backend endpoint is deployed.';
 
-        if (response.ok && result.success) {
-          formStatus.textContent = 'Message sent successfully. I will reply soon.';
-          formStatus.style.color = '#34d399';
-          contactForm.reset();
-        } else {
-          formStatus.textContent = result.message || 'Unable to send message right now.';
-          formStatus.style.color = '#f87171';
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok && result.success) {
+              formStatus.textContent = 'Message sent successfully. I will reply soon.';
+              formStatus.style.color = '#34d399';
+              contactForm.reset();
+              return;
+            }
+
+            if (response.status !== 404) {
+              finalMessage = result.message || 'Unable to send message right now.';
+              break;
+            }
+          } catch (error) {
+            finalMessage = 'Unable to reach the server. Make sure the backend endpoint is deployed.';
+          }
         }
+
+        formStatus.textContent = finalMessage;
+        formStatus.style.color = '#f87171';
       } catch (error) {
-        formStatus.textContent = 'Unable to reach the server. Please try again later.';
+        formStatus.textContent = 'Unable to reach the server. Make sure the backend endpoint is deployed.';
         formStatus.style.color = '#f87171';
       } finally {
         submitBtn.disabled = false;

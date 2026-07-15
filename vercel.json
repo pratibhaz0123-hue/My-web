@@ -1,16 +1,11 @@
 {
   "version": 2,
-  "name": "aaditya-portfolio",
   "builds": [
-    {
-      "src": "aaditya-portfolio.html",
-      "use": "@vercel/static"
-    }
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "**/*.{html,css,js,png,jpg,jpeg,webp,svg}", "use": "@vercel/static" }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/aaditya-portfolio.html"
-    }
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
